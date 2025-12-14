@@ -252,6 +252,9 @@ class ReviewEngine:
                 review.cost_cents = cost_cents
                 review.summary = claude_response.summary
                 review.risk_level = claude_response.risk_level
+                review.model = claude_response.model
+                review.system_prompt = claude_response.system_prompt
+                review.user_prompt = claude_response.user_prompt
 
                 # Build position index for line comments
                 position_index = build_position_index(filtered_files)
