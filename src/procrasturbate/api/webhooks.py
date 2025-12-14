@@ -1,7 +1,6 @@
 """GitHub webhook endpoints."""
 
 import logging
-from datetime import timedelta
 
 from fastapi import APIRouter, Header, HTTPException, Request
 
@@ -46,24 +45,41 @@ async def github_webhook(
             if event.action in ("opened", "synchronize", "reopened"):
                 # Use queueing_lock to ensure only one pending job per PR.
                 # New commits will replace pending jobs, preventing duplicate reviews.
-                # schedule_in provides debounce - wait for rapid commits to settle.
                 lock_key = f"pr:{event.repository.full_name}:{event.number}"
 
-                logger.info(
-                    f"Scheduling review for {event.repository.full_name}#{event.number} "
-                    f"(sha={event.pull_request.head.sha[:8]}) in {settings.review_debounce_seconds}s"
-                )
-
-                await process_pull_request.configure(
-                    schedule_in=timedelta(seconds=settings.review_debounce_seconds),
-                    queueing_lock=lock_key,
-                ).defer_async(
-                    installation_id=event.installation.id,
-                    repo_full_name=event.repository.full_name,
-                    pr_number=event.number,
-                    action=event.action,
-                    head_sha=event.pull_request.head.sha,
-                )
+                # Reactive debounce strategy:
+                # - PR opened/reopened: run immediately (be responsive)
+                # - Synchronize (new commits): debounce to let rapid commits settle
+                if event.action in ("opened", "reopened"):
+                    logger.info(
+                        f"Queueing immediate review for {event.repository.full_name}#{event.number} "
+                        f"(sha={event.pull_request.head.sha[:8]}, action={event.action})"
+                    )
+                    await process_pull_request.configure(
+                        queueing_lock=lock_key,
+                    ).defer_async(
+                        installation_id=event.installation.id,
+                        repo_full_name=event.repository.full_name,
+                        pr_number=event.number,
+                        action=event.action,
+                        head_sha=event.pull_request.head.sha,
+                    )
+                else:
+                    # Synchronize - debounce to handle rapid commits
+                    logger.info(
+                        f"Scheduling review for {event.repository.full_name}#{event.number} "
+                        f"(sha={event.pull_request.head.sha[:8]}) in {settings.review_debounce_seconds}s"
+                    )
+                    await process_pull_request.configure(
+                        schedule_in={"seconds": settings.review_debounce_seconds},
+                        queueing_lock=lock_key,
+                    ).defer_async(
+                        installation_id=event.installation.id,
+                        repo_full_name=event.repository.full_name,
+                        pr_number=event.number,
+                        action=event.action,
+                        head_sha=event.pull_request.head.sha,
+                    )
             return {"status": "queued"}
 
         case "issue_comment":

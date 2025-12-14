@@ -101,7 +101,7 @@ class IssueCommentEvent(BaseModel):
 class InstallationEvent(BaseModel):
     """Webhook payload for installation events."""
 
-    action: Literal["created", "deleted", "suspend", "unsuspend"]
+    action: Literal["created", "deleted", "suspend", "unsuspend", "new_permissions_accepted"]
     installation: GitHubInstallation
     repositories: list[GitHubRepository] = Field(default_factory=list)
     sender: GitHubUser
