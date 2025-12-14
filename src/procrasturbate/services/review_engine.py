@@ -492,6 +492,26 @@ class ReviewEngine:
         except Exception as e:
             logger.warning(f"Failed to update check run: {e}")
 
+    # Common context files to auto-detect in repositories
+    AUTO_CONTEXT_FILES = [
+        # Claude Code / AI assistant configs
+        "CLAUDE.md",
+        ".claude/CLAUDE.md",
+        "AGENTS.md",
+        # Cursor IDE rules
+        ".cursorrules",
+        ".cursor/rules",
+        # Project documentation
+        "CONTRIBUTING.md",
+        ".github/CONTRIBUTING.md",
+        "STYLEGUIDE.md",
+        "STYLE_GUIDE.md",
+        "CODE_STYLE.md",
+        # Architecture docs
+        "ARCHITECTURE.md",
+        "docs/ARCHITECTURE.md",
+    ]
+
     async def _load_context_files(
         self,
         gh: GitHubClient,
@@ -500,16 +520,34 @@ class ReviewEngine:
         ref: str,
         context_files: list[str],
     ) -> str | None:
-        """Load context files from repo."""
-        if not context_files:
-            return None
+        """Load context files from repo.
+
+        Automatically discovers common context files (CLAUDE.md, .cursorrules, etc.)
+        and merges with any explicitly configured files.
+        """
+        # Start with auto-detected files, then add explicit ones
+        all_files = list(self.AUTO_CONTEXT_FILES) + list(context_files or [])
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        unique_files: list[str] = []
+        for f in all_files:
+            if f not in seen:
+                seen.add(f)
+                unique_files.append(f)
 
         contents: list[str] = []
-        for path in context_files[:5]:  # Limit to 5 context files
+        loaded_paths: list[str] = []
+        for path in unique_files:
+            if len(contents) >= 5:  # Limit to 5 context files total
+                break
             try:
                 content = await gh.get_file_content(owner, repo, path, ref)
                 contents.append(f"### {path}\n\n{content[:5000]}")  # Truncate large files
+                loaded_paths.append(path)
             except Exception:
                 pass  # Skip files that don't exist
+
+        if loaded_paths:
+            logger.info(f"Loaded {len(loaded_paths)} context file(s): {', '.join(loaded_paths)}")
 
         return "\n\n---\n\n".join(contents) if contents else None
