@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "components/_badge.html" import status_badge, risk_badge %}
+
+{% block title %}{{ repository.full_name }} - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <div>
+    <h1 class="text-3xl font-bold">{{ repository.full_name }}</h1>
+    <p class="text-base-content/70">Default branch: {{ repository.default_branch }}</p>
+  </div>
+  <div class="flex gap-2">
+    {% if repository.is_enabled %}
+    <span class="badge badge-success">Enabled</span>
+    {% else %}
+    <span class="badge badge-ghost">Disabled</span>
+    {% endif %}
+    {% if repository.auto_review %}
+    <span class="badge badge-info">Auto Review</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Settings -->
+  <div class="lg:col-span-1">
+    {% include "repositories/_settings.html" %}
+  </div>
+
+  <!-- Recent Reviews -->
+  <div class="lg:col-span-2">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Recent Reviews</h2>
+
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>PR</th>
+                <th>Status</th>
+                <th>Risk</th>
+                <th>Comments</th>
+                <th>Cost</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for review in reviews %}
+              <tr>
+                <td>
+                  <a href="/reviews/{{ review.id }}" class="link">
+                    #{{ review.pr_number }}
+                  </a>
+                  <div class="text-xs text-base-content/70 max-w-xs truncate">
+                    {{ review.pr_title }}
+                  </div>
+                </td>
+                <td>{{ status_badge(review.status.value) }}</td>
+                <td>{{ risk_badge(review.risk_level) }}</td>
+                <td>{{ review.comments_posted }}</td>
+                <td class="font-mono">${{ "%.3f"|format(review.cost_cents / 100) }}</td>
+                <td class="text-sm text-base-content/70">
+                  {{ review.created_at | timeago }}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-8 text-base-content/50">
+                  No reviews yet
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

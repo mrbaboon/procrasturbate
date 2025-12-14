@@ -1,0 +1,39 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment files
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+
+# Tailwind output (if building locally)
+src/procrasturbate/static/dist/
+
+# Node modules (for Tailwind CLI)
+node_modules/
+
+# GitHub App private key
+*.private-key.pem
+
+# Playwright MCP
+.playwright-mcp/

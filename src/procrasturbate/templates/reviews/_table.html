@@ -1,0 +1,57 @@
+{% from "components/_badge.html" import status_badge, risk_badge %}
+
+<table class="table table-zebra">
+  <thead>
+    <tr>
+      <th>Repository</th>
+      <th>PR</th>
+      <th>Status</th>
+      <th>Risk</th>
+      <th>Comments</th>
+      <th>Cost</th>
+      <th>Time</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for review in reviews %}
+    <tr>
+      <td>
+        {% if review.repository %}
+        <a href="/repositories/{{ review.repository_id }}" class="link">
+          {{ review.repository.full_name }}
+        </a>
+        {% else %}
+        <span class="text-base-content/50">Unknown</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="/reviews/{{ review.id }}" class="link">
+          #{{ review.pr_number }}
+        </a>
+        <div class="text-xs text-base-content/70 max-w-xs truncate">
+          {{ review.pr_title }}
+        </div>
+      </td>
+      <td>{{ status_badge(review.status.value) }}</td>
+      <td>{{ risk_badge(review.risk_level) }}</td>
+      <td>{{ review.comments_posted }}</td>
+      <td class="font-mono">${{ "%.3f"|format(review.cost_cents / 100) }}</td>
+      <td class="text-sm text-base-content/70">
+        {{ review.created_at | timeago }}
+      </td>
+      <td>
+        <a href="/reviews/{{ review.id }}" class="btn btn-ghost btn-xs">
+          Details
+        </a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="8" class="text-center py-8 text-base-content/50">
+        No reviews found
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

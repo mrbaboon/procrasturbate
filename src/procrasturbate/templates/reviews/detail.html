@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% from "components/_badge.html" import status_badge, risk_badge, severity_badge %}
+
+{% block title %}Review #{{ review.id }} - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <div>
+    <h1 class="text-3xl font-bold">
+      {% if review.repository %}
+      {{ review.repository.full_name }}
+      {% endif %}
+      #{{ review.pr_number }}
+    </h1>
+    <p class="text-base-content/70">{{ review.pr_title }}</p>
+  </div>
+  <div class="flex gap-2">
+    {{ status_badge(review.status.value) }}
+    {{ risk_badge(review.risk_level) }}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Review Info -->
+  <div class="lg:col-span-1">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Details</h2>
+
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Author:</span>
+            <span>{{ review.pr_author }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Trigger:</span>
+            <span>{{ review.trigger.value | replace('_', ' ') | title }}</span>
+          </div>
+          {% if review.triggered_by %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Triggered by:</span>
+            <span>{{ review.triggered_by }}</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Files reviewed:</span>
+            <span>{{ review.files_reviewed }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Comments posted:</span>
+            <span>{{ review.comments_posted }}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Input tokens:</span>
+            <span class="font-mono">{{ "{:,}".format(review.input_tokens) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Output tokens:</span>
+            <span class="font-mono">{{ "{:,}".format(review.output_tokens) }}</span>
+          </div>
+          <div class="flex justify-between font-medium">
+            <span>Cost:</span>
+            <span class="font-mono">${{ "%.3f"|format(review.cost_cents / 100) }}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Created:</span>
+            <span>{{ review.created_at | timeago }}</span>
+          </div>
+          {% if review.completed_at %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Completed:</span>
+            <span>{{ review.completed_at | timeago }}</span>
+          </div>
+          {% endif %}
+
+          {% if review.head_sha %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Commit:</span>
+            <span class="font-mono text-sm">{{ review.head_sha[:7] }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if review.repository %}
+        <div class="card-actions justify-end mt-4">
+          <a href="https://github.com/{{ review.repository.full_name }}/pull/{{ review.pr_number }}"
+             target="_blank"
+             class="btn btn-sm btn-outline">
+            View on GitHub
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if review.error_message %}
+    <div class="card bg-error/10 shadow-xl mt-6">
+      <div class="card-body">
+        <h2 class="card-title text-error">Error</h2>
+        <p class="text-sm">{{ review.error_message }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Summary and Comments -->
+  <div class="lg:col-span-2">
+    {% if review.summary %}
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title">Summary</h2>
+        <p>{{ review.summary }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if review.comments %}
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Comments</h2>
+
+        <div class="space-y-4">
+          {% for comment in review.comments %}
+          <div class="border border-base-300 rounded-lg p-4">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="font-mono text-sm">{{ comment.file_path }}:{{ comment.line_number }}</span>
+                {{ severity_badge(comment.severity.value) }}
+                <span class="badge badge-ghost badge-sm">{{ comment.category }}</span>
+              </div>
+            </div>
+            <p class="text-sm">{{ comment.message }}</p>
+            {% if comment.suggested_fix %}
+            <div class="mt-2 bg-base-200 rounded p-3">
+              <div class="text-xs text-base-content/70 mb-1">Suggested fix:</div>
+              <pre class="text-sm overflow-x-auto"><code>{{ comment.suggested_fix }}</code></pre>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Comments</h2>
+        <p class="text-base-content/50">No comments for this review</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% macro status_badge(status) %}
+  {% set colors = {
+    'completed': 'badge-success',
+    'in_progress': 'badge-warning',
+    'pending': 'badge-info',
+    'failed': 'badge-error',
+    'skipped': 'badge-ghost'
+  } %}
+  <span class="badge {{ colors.get(status, 'badge-ghost') }}">
+    {{ status | replace('_', ' ') | title }}
+  </span>
+{% endmacro %}
+
+{% macro risk_badge(risk_level) %}
+  {% set colors = {
+    'low': 'badge-success',
+    'medium': 'badge-warning',
+    'high': 'badge-error',
+    'critical': 'badge-error badge-outline'
+  } %}
+  {% if risk_level %}
+  <span class="badge {{ colors.get(risk_level, 'badge-ghost') }}">
+    {{ risk_level | upper }}
+  </span>
+  {% else %}
+  <span class="text-base-content/50">-</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro severity_badge(severity) %}
+  {% set colors = {
+    'critical': 'badge-error',
+    'warning': 'badge-warning',
+    'suggestion': 'badge-info',
+    'nitpick': 'badge-ghost',
+    'praise': 'badge-success'
+  } %}
+  <span class="badge badge-sm {{ colors.get(severity, 'badge-ghost') }}">
+    {{ severity | title }}
+  </span>
+{% endmacro %}

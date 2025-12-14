@@ -1,0 +1,9 @@
+{% macro stat_card(title, value, description=None) %}
+<div class="stat bg-base-100 rounded-box shadow">
+  <div class="stat-title">{{ title }}</div>
+  <div class="stat-value text-primary">{{ value }}</div>
+  {% if description %}
+  <div class="stat-desc">{{ description }}</div>
+  {% endif %}
+</div>
+{% endmacro %}

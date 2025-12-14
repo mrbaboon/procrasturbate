@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Repositories - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold">Repositories</h1>
+</div>
+
+<!-- Filter -->
+<div class="card bg-base-100 shadow mb-6">
+  <div class="card-body py-3">
+    <form class="flex items-center gap-4">
+      <select name="installation_id" class="select select-bordered select-sm w-full max-w-xs"
+              onchange="this.form.submit()">
+        <option value="">All installations</option>
+        {% for installation in installations %}
+        <option value="{{ installation.id }}"
+                {% if installation.id == selected_installation %}selected{% endif %}>
+          {{ installation.owner_login }}
+        </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+</div>
+
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th>Repository</th>
+            <th>Installation</th>
+            <th>Enabled</th>
+            <th>Auto Review</th>
+            <th>Budget Override</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for repo in repositories %}
+          <tr>
+            <td>
+              <a href="/repositories/{{ repo.id }}" class="link font-medium">
+                {{ repo.full_name }}
+              </a>
+            </td>
+            <td>
+              {% if repo.installation %}
+              <a href="/installations/{{ repo.installation_id }}" class="link text-sm">
+                {{ repo.installation.owner_login }}
+              </a>
+              {% endif %}
+            </td>
+            <td>
+              {% if repo.is_enabled %}
+              <span class="badge badge-success badge-sm">Yes</span>
+              {% else %}
+              <span class="badge badge-ghost badge-sm">No</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if repo.auto_review %}
+              <span class="badge badge-success badge-sm">Yes</span>
+              {% else %}
+              <span class="badge badge-ghost badge-sm">No</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if repo.monthly_budget_cents %}
+              <span class="font-mono">${{ repo.monthly_budget_cents // 100 }}</span>
+              {% else %}
+              <span class="text-base-content/50">-</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="/repositories/{{ repo.id }}" class="btn btn-ghost btn-xs">
+                Settings
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-8 text-base-content/50">
+              No repositories found
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

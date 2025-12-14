@@ -1,0 +1,77 @@
+<form
+  hx-patch="/repositories/{{ repository.id }}"
+  hx-swap="outerHTML"
+  hx-target="this"
+  class="card bg-base-100 shadow-xl"
+  x-data="{ editing: false }"
+>
+  <div class="card-body">
+    <div class="flex justify-between items-center">
+      <h2 class="card-title">Settings</h2>
+      <button type="button" class="btn btn-sm btn-ghost" @click="editing = !editing">
+        <span x-show="!editing">Edit</span>
+        <span x-show="editing">Cancel</span>
+      </button>
+    </div>
+
+    <div class="form-control">
+      <label class="label cursor-pointer">
+        <span class="label-text">Reviews Enabled</span>
+        <input
+          type="checkbox"
+          name="is_enabled"
+          value="true"
+          class="toggle toggle-primary"
+          {% if repository.is_enabled %}checked{% endif %}
+          :disabled="!editing"
+        >
+      </label>
+    </div>
+
+    <div class="form-control">
+      <label class="label cursor-pointer">
+        <span class="label-text">Auto Review</span>
+        <input
+          type="checkbox"
+          name="auto_review"
+          value="true"
+          class="toggle toggle-primary"
+          {% if repository.auto_review %}checked{% endif %}
+          :disabled="!editing"
+        >
+      </label>
+    </div>
+
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">Budget Override (optional)</span>
+      </label>
+      <div x-show="editing" class="join">
+        <span class="join-item btn btn-disabled">$</span>
+        <input
+          type="number"
+          name="monthly_budget_dollars"
+          value="{{ repository.monthly_budget_cents // 100 if repository.monthly_budget_cents else '' }}"
+          class="input input-bordered join-item w-full"
+          placeholder="Use installation budget"
+          step="1"
+          min="0"
+        >
+      </div>
+      <div x-show="!editing" class="py-2 font-mono">
+        {% if repository.monthly_budget_cents %}
+        ${{ repository.monthly_budget_cents // 100 }}
+        {% else %}
+        <span class="text-base-content/50">Using installation budget</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-actions justify-end mt-4" x-show="editing">
+      <button type="submit" class="btn btn-primary">
+        <span class="htmx-indicator loading loading-spinner loading-sm"></span>
+        Save Changes
+      </button>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{{ installation.owner_login }} - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <div>
+    <h1 class="text-3xl font-bold">{{ installation.owner_login }}</h1>
+    <p class="text-base-content/70">{{ installation.owner_type }} Installation</p>
+  </div>
+  <div>
+    {% if installation.is_active %}
+    <span class="badge badge-success">Active</span>
+    {% else %}
+    <span class="badge badge-error">Suspended</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Settings -->
+  <div class="lg:col-span-1">
+    {% include "installations/_settings.html" %}
+
+    <!-- Current Usage -->
+    <div class="card bg-base-100 shadow-xl mt-6">
+      <div class="card-body">
+        <h2 class="card-title">Current Month Usage</h2>
+        {% if current_usage %}
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span>Reviews:</span>
+            <span class="font-mono">{{ current_usage.total_reviews }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Input Tokens:</span>
+            <span class="font-mono">{{ "{:,}".format(current_usage.total_input_tokens) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Output Tokens:</span>
+            <span class="font-mono">{{ "{:,}".format(current_usage.total_output_tokens) }}</span>
+          </div>
+          <div class="flex justify-between font-medium">
+            <span>Total Cost:</span>
+            <span class="font-mono">${{ "%.2f"|format(current_usage.total_cost_cents / 100) }}</span>
+          </div>
+          <progress
+            class="progress progress-primary w-full mt-2"
+            value="{{ current_usage.total_cost_cents }}"
+            max="{{ installation.monthly_budget_cents }}">
+          </progress>
+        </div>
+        {% else %}
+        <p class="text-base-content/50">No usage this month</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Repositories -->
+  <div class="lg:col-span-2">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Repositories</h2>
+
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>Repository</th>
+                <th>Enabled</th>
+                <th>Auto Review</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for repo in repositories %}
+              <tr>
+                <td>
+                  <a href="/repositories/{{ repo.id }}" class="link">
+                    {{ repo.full_name }}
+                  </a>
+                </td>
+                <td>
+                  {% if repo.is_enabled %}
+                  <span class="badge badge-success badge-sm">Yes</span>
+                  {% else %}
+                  <span class="badge badge-ghost badge-sm">No</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if repo.auto_review %}
+                  <span class="badge badge-success badge-sm">Yes</span>
+                  {% else %}
+                  <span class="badge badge-ghost badge-sm">No</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="/repositories/{{ repo.id }}" class="btn btn-ghost btn-xs">
+                    Settings
+                  </a>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-8 text-base-content/50">
+                  No repositories yet
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

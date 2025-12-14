@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "components/_badge.html" import status_badge, risk_badge %}
+
+{% block title %}Reviews - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold">Reviews</h1>
+</div>
+
+<!-- Filters -->
+<div class="card bg-base-100 shadow mb-6" x-data="{ open: false }">
+  <div class="card-body py-3">
+    <div class="flex items-center justify-between">
+      <span class="font-medium">Filters</span>
+      <button class="btn btn-sm btn-ghost" @click="open = !open">
+        <span x-show="!open">Show</span>
+        <span x-show="open">Hide</span>
+      </button>
+    </div>
+
+    <form
+      x-show="open"
+      x-collapse
+      hx-get="/reviews"
+      hx-push-url="true"
+      hx-target="#reviews-table"
+      hx-swap="innerHTML"
+      class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4"
+    >
+      <select name="repository_id" class="select select-bordered w-full">
+        <option value="">All repositories</option>
+        {% for repo in repositories %}
+        <option value="{{ repo.id }}" {% if repo.id == selected_repo %}selected{% endif %}>
+          {{ repo.full_name }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <select name="status" class="select select-bordered w-full">
+        <option value="">All statuses</option>
+        <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+        <option value="failed" {% if selected_status == 'failed' %}selected{% endif %}>Failed</option>
+        <option value="skipped" {% if selected_status == 'skipped' %}selected{% endif %}>Skipped</option>
+        <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+      </select>
+
+      <select name="risk_level" class="select select-bordered w-full">
+        <option value="">All risk levels</option>
+        <option value="low" {% if selected_risk == 'low' %}selected{% endif %}>Low</option>
+        <option value="medium" {% if selected_risk == 'medium' %}selected{% endif %}>Medium</option>
+        <option value="high" {% if selected_risk == 'high' %}selected{% endif %}>High</option>
+        <option value="critical" {% if selected_risk == 'critical' %}selected{% endif %}>Critical</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary">
+        Apply Filters
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Reviews table -->
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <div class="overflow-x-auto" id="reviews-table">
+      {% include "reviews/_table.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Installations - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold">Installations</h1>
+</div>
+
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th>Owner</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Budget</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for installation in installations %}
+          <tr>
+            <td class="font-medium">{{ installation.owner_login }}</td>
+            <td>
+              <span class="badge badge-sm">{{ installation.owner_type }}</span>
+            </td>
+            <td>
+              {% if installation.is_active %}
+              <span class="badge badge-success badge-sm">Active</span>
+              {% else %}
+              <span class="badge badge-error badge-sm">Suspended</span>
+              {% endif %}
+            </td>
+            <td class="font-mono">${{ installation.monthly_budget_cents // 100 }}</td>
+            <td class="text-sm text-base-content/70">
+              {{ installation.created_at | timeago }}
+            </td>
+            <td>
+              <a href="/installations/{{ installation.id }}" class="btn btn-ghost btn-xs">
+                Details
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-8 text-base-content/50">
+              No installations yet. Install the GitHub App to get started.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

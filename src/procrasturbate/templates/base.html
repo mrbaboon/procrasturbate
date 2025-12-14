@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Procrasturbate{% endblock %}</title>
+
+  <!-- Tailwind + DaisyUI via CDN (for dev - use built CSS in production) -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    .htmx-indicator { display: none; }
+    .htmx-request .htmx-indicator { display: inline; }
+    .htmx-request.htmx-indicator { display: inline; }
+  </style>
+</head>
+<body class="min-h-screen bg-base-200" hx-boost="true">
+
+  <!-- Navbar -->
+  <div class="navbar bg-base-100 shadow-lg">
+    <div class="flex-1">
+      <a href="/" class="btn btn-ghost text-xl">Procrasturbate</a>
+    </div>
+    <div class="flex-none">
+      <ul class="menu menu-horizontal px-1">
+        <li><a href="/">Dashboard</a></li>
+        <li><a href="/installations">Installations</a></li>
+        <li><a href="/repositories">Repos</a></li>
+        <li><a href="/reviews">Reviews</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Flash messages container -->
+  <div id="flash-container" class="container mx-auto px-4 mt-4"
+       x-data="{ messages: [] }"
+       @show-flash.window="messages.push($event.detail); setTimeout(() => messages.shift(), 5000)">
+    <template x-for="msg in messages" :key="msg.message">
+      <div class="alert mb-2" :class="'alert-' + msg.category">
+        <span x-text="msg.message"></span>
+      </div>
+    </template>
+  </div>
+
+  <!-- Main content -->
+  <main class="container mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Loading indicator -->
+  <div class="htmx-indicator fixed top-0 left-0 right-0 z-50">
+    <progress class="progress progress-primary w-full h-1"></progress>
+  </div>
+
+</body>
+</html>

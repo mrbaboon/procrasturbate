@@ -1,0 +1,58 @@
+<form
+  hx-patch="/installations/{{ installation.id }}"
+  hx-swap="outerHTML"
+  hx-target="this"
+  class="card bg-base-100 shadow-xl"
+  x-data="{ editing: false }"
+>
+  <div class="card-body">
+    <div class="flex justify-between items-center">
+      <h2 class="card-title">Settings</h2>
+      <button type="button" class="btn btn-sm btn-ghost" @click="editing = !editing">
+        <span x-show="!editing">Edit</span>
+        <span x-show="editing">Cancel</span>
+      </button>
+    </div>
+
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">Monthly Budget</span>
+      </label>
+      <div x-show="editing" class="join">
+        <span class="join-item btn btn-disabled">$</span>
+        <input
+          type="number"
+          name="monthly_budget_dollars"
+          value="{{ installation.monthly_budget_cents // 100 }}"
+          class="input input-bordered join-item w-full"
+          step="1"
+          min="0"
+        >
+      </div>
+      <div x-show="!editing" class="py-2 font-mono">
+        ${{ installation.monthly_budget_cents // 100 }}
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label class="label cursor-pointer">
+        <span class="label-text">Active</span>
+        <input
+          type="checkbox"
+          name="is_active"
+          value="true"
+          class="toggle toggle-primary"
+          {% if installation.is_active %}checked{% endif %}
+          :disabled="!editing"
+        >
+      </label>
+    </div>
+
+    <div class="card-actions justify-end mt-4" x-show="editing">
+      <button type="submit" class="btn btn-primary">
+        <span class="htmx-indicator loading loading-spinner loading-sm"></span>
+        Save Changes
+      </button>
+    </div>
+  </div>
+</form>

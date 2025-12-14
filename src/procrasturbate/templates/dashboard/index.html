@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% from "components/_badge.html" import status_badge, risk_badge %}
+{% from "components/_card.html" import stat_card %}
+
+{% block title %}Dashboard - Procrasturbate{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold">Dashboard</h1>
+  <div class="text-sm text-base-content/70">
+    {{ current_month }} usage
+  </div>
+</div>
+
+<!-- Stats grid -->
+<div class="stats shadow w-full mb-8 bg-base-100">
+  {{ stat_card("Total Reviews", stats.total_reviews) }}
+  {{ stat_card("Total Spend", "$%.2f"|format(stats.total_cost_cents / 100)) }}
+  {{ stat_card("Input Tokens", "{:,}".format(stats.total_input_tokens)) }}
+  {{ stat_card("Output Tokens", "{:,}".format(stats.total_output_tokens)) }}
+</div>
+
+<!-- Recent reviews -->
+<div class="card bg-base-100 shadow-xl mb-8">
+  <div class="card-body">
+    <h2 class="card-title">Recent Reviews</h2>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th>Repository</th>
+            <th>PR</th>
+            <th>Status</th>
+            <th>Risk</th>
+            <th>Cost</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for review in reviews %}
+          <tr>
+            <td>
+              {% if review.repository %}
+              <a href="/repositories/{{ review.repository_id }}" class="link">
+                {{ review.repository.full_name }}
+              </a>
+              {% else %}
+              <span class="text-base-content/50">Unknown</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="/reviews/{{ review.id }}" class="link">
+                #{{ review.pr_number }}
+              </a>
+              <div class="text-xs text-base-content/70 max-w-xs truncate">
+                {{ review.pr_title }}
+              </div>
+            </td>
+            <td>{{ status_badge(review.status.value) }}</td>
+            <td>{{ risk_badge(review.risk_level) }}</td>
+            <td class="font-mono">${{ "%.3f"|format(review.cost_cents / 100) }}</td>
+            <td class="text-sm text-base-content/70">
+              {{ review.created_at | timeago }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-8 text-base-content/50">
+              No reviews yet
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-actions justify-end">
+      <a href="/reviews" class="btn btn-ghost btn-sm">View all</a>
+    </div>
+  </div>
+</div>
+
+<!-- Installations overview -->
+{% if installations %}
+<h2 class="text-xl font-bold mb-4">Active Installations</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for installation in installations %}
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">
+        {{ installation.owner_login }}
+        <span class="badge badge-sm">{{ installation.owner_type }}</span>
+      </h2>
+
+      <div class="text-sm text-base-content/70">
+        Budget: ${{ installation.monthly_budget_cents // 100 }}/month
+      </div>
+
+      <div class="card-actions justify-end mt-4">
+        <a href="/installations/{{ installation.id }}" class="btn btn-sm btn-ghost">
+          Manage
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
