@@ -1,8 +1,8 @@
 """Parse unified diffs and map line positions for GitHub API."""
 
-import fnmatch
 import re
 from dataclasses import dataclass
+from pathlib import PurePath
 
 
 @dataclass
@@ -176,10 +176,14 @@ def filter_files_by_patterns(
     include_patterns: list[str],
     exclude_patterns: list[str],
 ) -> list[FileDiff]:
-    """Filter files by glob patterns."""
+    """Filter files by glob patterns.
+
+    Uses PurePath.match() which properly handles ** glob patterns.
+    """
 
     def matches_any(path: str, patterns: list[str]) -> bool:
-        return any(fnmatch.fnmatch(path, p) for p in patterns)
+        pure_path = PurePath(path)
+        return any(pure_path.match(p) for p in patterns)
 
     filtered: list[FileDiff] = []
     for f in files:
