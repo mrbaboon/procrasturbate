@@ -35,3 +35,4 @@ def process_data(items):
         if item != None:
             result.append(item)
     return result
+# Test
