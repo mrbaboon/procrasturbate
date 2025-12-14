@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class PathConfig(BaseModel):
     """Path include/exclude patterns."""
 
-    include: list[str] = Field(default_factory=lambda: ["**/*"])
+    include: list[str] = Field(default_factory=lambda: ["**"])  # ** matches all files including root
     exclude: list[str] = Field(default_factory=list)
 
 
