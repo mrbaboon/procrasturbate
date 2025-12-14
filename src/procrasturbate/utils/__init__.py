@@ -28,7 +28,7 @@ def fetch_url(url):
 
 
 def process_data(items):
-    """Process a list of items."""
+    """Process a list of items and filter out None values."""
     result = []
     for i in range(0, len(items)):
         item = items[i]

@@ -27,7 +27,7 @@ class GitHubInstallation(BaseModel):
     """GitHub App installation info."""
 
     id: int
-    account: GitHubUser
+    account: GitHubUser | None = None  # Not always present in webhook payloads
 
 
 class PullRequestHead(BaseModel):
