@@ -60,6 +60,10 @@ class ClaudeReviewResponse:
     comments: list[dict]  # [{file, line, severity, category, message, suggested_fix?}]
     input_tokens: int
     output_tokens: int
+    # For debugging/transparency
+    model: str
+    system_prompt: str
+    user_prompt: str
 
 
 class ClaudeClient:
@@ -164,4 +168,7 @@ Please review this pull request and provide your analysis as JSON."""
             comments=data.get("comments", []),
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
+            model=model,
+            system_prompt=system_prompt,
+            user_prompt=user_message,
         )

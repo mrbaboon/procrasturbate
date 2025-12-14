@@ -90,11 +90,18 @@ class Review(Base):
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
     cost_cents: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Model used for review
+    model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     # Error info if failed
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Config snapshot (what config was active at review time)
     config_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    # Full prompts used (for debugging/transparency)
+    system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    user_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

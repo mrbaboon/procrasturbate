@@ -85,6 +85,37 @@
             <span class="font-mono text-sm">{{ review.head_sha[:7] }}</span>
           </div>
           {% endif %}
+
+          {% if review.model %}
+          <div class="divider"></div>
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Model:</span>
+            <span class="font-mono text-sm">{{ review.model }}</span>
+          </div>
+          {% endif %}
+
+          {% if review.started_at and review.completed_at %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Duration:</span>
+            <span class="font-mono text-sm">{{ ((review.completed_at - review.started_at).total_seconds()) | int }}s</span>
+          </div>
+          {% endif %}
+
+          {% if review.github_review_id or review.github_check_run_id %}
+          <div class="divider"></div>
+          {% if review.github_review_id %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">GitHub Review ID:</span>
+            <span class="font-mono text-sm">{{ review.github_review_id }}</span>
+          </div>
+          {% endif %}
+          {% if review.github_check_run_id %}
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Check Run ID:</span>
+            <span class="font-mono text-sm">{{ review.github_check_run_id }}</span>
+          </div>
+          {% endif %}
+          {% endif %}
         </div>
 
         {% if review.repository %}
@@ -98,6 +129,20 @@
         {% endif %}
       </div>
     </div>
+
+    {% if review.config_snapshot %}
+    <div class="card bg-base-100 shadow-xl mt-6">
+      <div class="card-body">
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="checkbox" />
+          <div class="collapse-title font-medium">Config Snapshot</div>
+          <div class="collapse-content">
+            <pre class="text-xs overflow-x-auto whitespace-pre-wrap">{{ review.config_snapshot | tojson(indent=2) }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
 
     {% if review.error_message %}
     <div class="card bg-error/10 shadow-xl mt-6">
@@ -152,6 +197,35 @@
       <div class="card-body">
         <h2 class="card-title">Comments</h2>
         <p class="text-base-content/50">No comments for this review</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if review.system_prompt or review.user_prompt %}
+    <div class="card bg-base-100 shadow-xl mt-6">
+      <div class="card-body">
+        <h2 class="card-title">Prompts</h2>
+        <p class="text-sm text-base-content/70 mb-4">The exact prompts sent to Claude for this review.</p>
+
+        {% if review.system_prompt %}
+        <div class="collapse collapse-arrow bg-base-200 mb-2">
+          <input type="checkbox" />
+          <div class="collapse-title font-medium">System Prompt</div>
+          <div class="collapse-content">
+            <pre class="text-xs overflow-x-auto whitespace-pre-wrap bg-base-300 p-4 rounded mt-2">{{ review.system_prompt }}</pre>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if review.user_prompt %}
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="checkbox" />
+          <div class="collapse-title font-medium">User Prompt</div>
+          <div class="collapse-content">
+            <pre class="text-xs overflow-x-auto whitespace-pre-wrap bg-base-300 p-4 rounded mt-2">{{ review.user_prompt }}</pre>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endif %}
