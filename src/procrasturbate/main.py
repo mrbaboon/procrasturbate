@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from .api.router import router
 from .config import settings
 from .database import init_db
+from .tasks.worker import app as procrastinate_app
 from .utils.logging import setup_logging
 
 
@@ -18,9 +19,10 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     await init_db()
+    await procrastinate_app.open_async()
     yield
     # Shutdown
-    pass
+    await procrastinate_app.close_async()
 
 
 app = FastAPI(
