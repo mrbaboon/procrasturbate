@@ -76,6 +76,12 @@ class Settings(BaseSettings):
         description="Post line-level comments vs summary only",
     )
 
+    # Debounce settings
+    review_debounce_seconds: int = Field(
+        30,
+        description="Wait this long before processing a PR review to debounce rapid commits",
+    )
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

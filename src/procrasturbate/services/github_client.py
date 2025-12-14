@@ -169,3 +169,72 @@ class GitHubClient:
         )
         response.raise_for_status()
         return response.json()
+
+    async def create_check_run(
+        self,
+        owner: str,
+        repo: str,
+        name: str,
+        head_sha: str,
+        status: str = "queued",  # queued, in_progress, completed
+        details_url: str | None = None,
+        external_id: str | None = None,
+        output: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Create a check run for a commit.
+
+        status: queued, in_progress, completed
+        output: {"title": "...", "summary": "...", "text": "..."}
+        """
+        assert self._client is not None
+        payload: dict[str, Any] = {
+            "name": name,
+            "head_sha": head_sha,
+            "status": status,
+        }
+        if details_url:
+            payload["details_url"] = details_url
+        if external_id:
+            payload["external_id"] = external_id
+        if output:
+            payload["output"] = output
+
+        response = await self._client.post(
+            f"/repos/{owner}/{repo}/check-runs",
+            json=payload,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update_check_run(
+        self,
+        owner: str,
+        repo: str,
+        check_run_id: int,
+        status: str | None = None,
+        conclusion: str | None = None,  # success, failure, neutral, cancelled, skipped, timed_out, action_required
+        output: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Update a check run.
+
+        status: queued, in_progress, completed
+        conclusion: required when status=completed
+        output: {"title": "...", "summary": "...", "text": "..."}
+        """
+        assert self._client is not None
+        payload: dict[str, Any] = {}
+        if status:
+            payload["status"] = status
+        if conclusion:
+            payload["conclusion"] = conclusion
+        if output:
+            payload["output"] = output
+
+        response = await self._client.patch(
+            f"/repos/{owner}/{repo}/check-runs/{check_run_id}",
+            json=payload,
+        )
+        response.raise_for_status()
+        return response.json()

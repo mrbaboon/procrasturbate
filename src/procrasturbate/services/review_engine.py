@@ -1,5 +1,6 @@
 """Orchestrates the PR review process."""
 
+import logging
 from datetime import datetime
 
 from sqlalchemy import select
@@ -21,6 +22,8 @@ from .cost_tracker import calculate_cost_cents, check_budget, record_usage
 from .diff_parser import build_position_index, filter_files_by_patterns, parse_diff
 from .github_client import GitHubClient
 
+logger = logging.getLogger(__name__)
+
 
 class ReviewEngine:
     """Orchestrates the PR review process."""
@@ -36,6 +39,7 @@ class ReviewEngine:
         pr_number: int,
         trigger: ReviewTrigger,
         triggered_by: str | None = None,
+        expected_head_sha: str | None = None,
     ) -> Review:
         """
         Main entry point for reviewing a PR.
@@ -122,6 +126,25 @@ class ReviewEngine:
                 review.head_sha = pr["head"]["sha"]
                 review.base_sha = pr["base"]["sha"]
 
+                # Create GitHub check run to show review in progress
+                try:
+                    check_run = await gh.create_check_run(
+                        owner,
+                        repo_name,
+                        name="AI Code Review",
+                        head_sha=pr["head"]["sha"],
+                        status="in_progress",
+                        output={
+                            "title": "Review in progress",
+                            "summary": f"Analyzing PR #{pr_number}: {pr['title']}",
+                        },
+                    )
+                    review.github_check_run_id = check_run["id"]
+                    await self.session.flush()
+                except Exception as e:
+                    # Check run creation is optional - don't fail the review
+                    logger.warning(f"Failed to create check run: {e}")
+
                 # Check file count
                 if pr["changed_files"] > config.max_files:
                     await gh.create_issue_comment(
@@ -172,6 +195,43 @@ class ReviewEngine:
                 context_content = await self._load_context_files(
                     gh, owner, repo_name, pr["head"]["sha"], config.context_files
                 )
+
+                # Before the expensive Claude API call, check if a newer commit exists.
+                # This saves money when commits come in rapid succession.
+                if expected_head_sha and expected_head_sha != pr["head"]["sha"]:
+                    logger.info(
+                        f"Cancelling review for {repo_full_name}#{pr_number}: "
+                        f"expected sha {expected_head_sha[:8]} but PR is now at {pr['head']['sha'][:8]}"
+                    )
+                    review.status = ReviewStatus.SUPERSEDED
+                    review.error_message = (
+                        f"Superseded by newer commit {pr['head']['sha'][:8]}"
+                    )
+                    review.completed_at = datetime.utcnow()
+                    await self._update_check_run(
+                        gh, owner, repo_name, review.github_check_run_id, review
+                    )
+                    await self.session.commit()
+                    return review
+
+                # Re-fetch PR to double-check head SHA right before calling Claude
+                # (handles race condition if commit arrived during diff parsing)
+                current_pr = await gh.get_pull_request(owner, repo_name, pr_number)
+                if current_pr["head"]["sha"] != pr["head"]["sha"]:
+                    logger.info(
+                        f"Cancelling review for {repo_full_name}#{pr_number}: "
+                        f"new commit detected ({current_pr['head']['sha'][:8]})"
+                    )
+                    review.status = ReviewStatus.SUPERSEDED
+                    review.error_message = (
+                        f"Superseded by newer commit {current_pr['head']['sha'][:8]}"
+                    )
+                    review.completed_at = datetime.utcnow()
+                    await self._update_check_run(
+                        gh, owner, repo_name, review.github_check_run_id, review
+                    )
+                    await self.session.commit()
+                    return review
 
                 # Call Claude
                 claude_response = await self.claude.review_diff(
@@ -300,6 +360,11 @@ class ReviewEngine:
                     cost_cents,
                 )
 
+                # Update check run to show success
+                await self._update_check_run(
+                    gh, owner, repo_name, review.github_check_run_id, review
+                )
+
                 await self.session.commit()
                 return review
 
@@ -307,6 +372,17 @@ class ReviewEngine:
             review.status = ReviewStatus.FAILED
             review.error_message = str(e)
             review.completed_at = datetime.utcnow()
+
+            # Update check run to show failure
+            if review.github_check_run_id:
+                try:
+                    async with GitHubClient(github_installation_id) as gh:
+                        await self._update_check_run(
+                            gh, owner, repo_name, review.github_check_run_id, review
+                        )
+                except Exception as check_err:
+                    logger.warning(f"Failed to update check run on error: {check_err}")
+
             await self.session.commit()
             raise
 
@@ -366,6 +442,55 @@ class ReviewEngine:
         self.session.add(review)
         await self.session.commit()
         return review
+
+    async def _update_check_run(
+        self,
+        gh: GitHubClient,
+        owner: str,
+        repo_name: str,
+        check_run_id: int | None,
+        review: Review,
+    ) -> None:
+        """Update GitHub check run with final status."""
+        if not check_run_id:
+            return
+
+        try:
+            # Map review status to check run conclusion
+            conclusion_map = {
+                ReviewStatus.COMPLETED: "success",
+                ReviewStatus.FAILED: "failure",
+                ReviewStatus.SKIPPED: "skipped",
+                ReviewStatus.SUPERSEDED: "cancelled",
+            }
+            conclusion = conclusion_map.get(review.status, "neutral")
+
+            # Build output based on status
+            if review.status == ReviewStatus.COMPLETED:
+                title = f"Review complete - {review.risk_level.upper() if review.risk_level else 'OK'}"
+                summary = review.summary or "Review completed successfully."
+                if review.comments_posted:
+                    summary += f"\n\n**{review.comments_posted} comments** posted."
+            elif review.status == ReviewStatus.SUPERSEDED:
+                title = "Review cancelled"
+                summary = review.error_message or "Superseded by newer commit."
+            elif review.status == ReviewStatus.SKIPPED:
+                title = "Review skipped"
+                summary = review.error_message or "Review was skipped."
+            else:
+                title = "Review failed"
+                summary = review.error_message or "An error occurred during review."
+
+            await gh.update_check_run(
+                owner,
+                repo_name,
+                check_run_id,
+                status="completed",
+                conclusion=conclusion,
+                output={"title": title, "summary": summary},
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update check run: {e}")
 
     async def _load_context_files(
         self,

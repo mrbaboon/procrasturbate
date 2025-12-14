@@ -24,6 +24,7 @@ class ReviewStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     SKIPPED = "skipped"  # e.g., budget exceeded, too many files
+    SUPERSEDED = "superseded"  # newer commit arrived, cancelled to save cost
 
 
 class ReviewTrigger(str, Enum):
@@ -75,6 +76,10 @@ class Review(Base):
         BigInteger,
         nullable=True,
     )  # GitHub's review ID
+    github_check_run_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        nullable=True,
+    )  # GitHub Check Run ID for status indication
 
     # Stats
     files_reviewed: Mapped[int] = mapped_column(Integer, default=0)

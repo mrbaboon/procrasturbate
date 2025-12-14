@@ -14,6 +14,7 @@ async def process_pull_request(
     repo_full_name: str,
     pr_number: int,
     action: str,
+    head_sha: str,
 ) -> None:
     """Process a PR event and generate a review."""
     trigger_map = {
@@ -30,6 +31,7 @@ async def process_pull_request(
             repo_full_name=repo_full_name,
             pr_number=pr_number,
             trigger=trigger,
+            expected_head_sha=head_sha,
         )
 
 
