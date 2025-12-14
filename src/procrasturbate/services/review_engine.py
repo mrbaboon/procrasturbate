@@ -131,7 +131,7 @@ class ReviewEngine:
                     check_run = await gh.create_check_run(
                         owner,
                         repo_name,
-                        name="AI Code Review",
+                        name=settings.check_run_name,
                         head_sha=pr["head"]["sha"],
                         status="in_progress",
                         output={

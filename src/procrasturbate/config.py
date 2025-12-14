@@ -82,6 +82,12 @@ class Settings(BaseSettings):
         description="Wait this long before processing a PR review to debounce rapid commits",
     )
 
+    # Check run settings
+    check_run_name: str = Field(
+        "AI Code Review",
+        description="Name shown in GitHub Checks UI",
+    )
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
