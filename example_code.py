@@ -1,6 +1,7 @@
-"""Example code for testing the AI reviewer."""
+"""Example code for testing the AI reviewer with debounce."""
 
 import os
+import sys  # Another unused import
 
 
 def get_user_data(user_id):
