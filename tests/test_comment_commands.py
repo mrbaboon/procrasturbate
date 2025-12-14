@@ -6,7 +6,7 @@ from procrasturbate.services.comment_commands import parse_command, CommandType
 
 def test_parse_review_command():
     """Test parsing @reviewer review command."""
-    result = parse_command("Please @reviewer review this PR")
+    result = parse_command("@reviewer review")
 
     assert result is not None
     assert result.command_type == CommandType.REVIEW
@@ -67,3 +67,27 @@ def test_reviewer_in_middle():
 
     assert result is not None
     assert result.command_type == CommandType.REVIEW
+
+
+def test_procrasturbate_trigger():
+    """Test @procrasturbate alternate trigger."""
+    result = parse_command("@procrasturbate review")
+
+    assert result is not None
+    assert result.command_type == CommandType.REVIEW
+
+
+def test_gooning_time_trigger():
+    """Test 'it's gooning time' easter egg trigger."""
+    result = parse_command("it's gooning time review")
+
+    assert result is not None
+    assert result.command_type == CommandType.REVIEW
+
+
+def test_gooning_time_case_insensitive():
+    """Test easter egg is case insensitive."""
+    result = parse_command("IT'S GOONING TIME security")
+
+    assert result is not None
+    assert result.command_type == CommandType.SECURITY

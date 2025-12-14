@@ -2,7 +2,7 @@
 
 from ..database import async_session_factory
 from ..models import ReviewTrigger
-from ..services.comment_commands import HELP_MESSAGE, CommandType, parse_command
+from ..services.comment_commands import CommandType, get_help_message, parse_command
 from ..services.github_client import GitHubClient
 from ..services.review_engine import ReviewEngine
 from .worker import app
@@ -53,7 +53,7 @@ async def process_comment_command(
     async with GitHubClient(installation_id) as gh:
         match parsed.command_type:
             case CommandType.HELP:
-                await gh.create_issue_comment(owner, repo, pr_number, HELP_MESSAGE)
+                await gh.create_issue_comment(owner, repo, pr_number, get_help_message())
 
             case CommandType.REVIEW:
                 # TODO: Handle path-specific reviews via parsed.args

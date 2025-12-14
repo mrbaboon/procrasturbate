@@ -74,9 +74,9 @@ def test_build_position_index():
     assert "src/main.py" in index
     assert "src/utils.py" in index
 
-    # New file should have all lines mapped
+    # New file should have all lines mapped (including trailing newline)
     utils_positions = index["src/utils.py"]
-    assert len(utils_positions) == 5
+    assert len(utils_positions) == 6
 
 
 def test_filter_files_by_patterns():

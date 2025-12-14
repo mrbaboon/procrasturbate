@@ -82,6 +82,12 @@ class Settings(BaseSettings):
         description="Wait this long before processing a PR review to debounce rapid commits",
     )
 
+    # Bot mention triggers (first one is the "official" name for help text)
+    bot_triggers: list[str] = Field(
+        default=["@reviewer", "@procrasturbate", "it's gooning time"],
+        description="Phrases that trigger the bot in comments",
+    )
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

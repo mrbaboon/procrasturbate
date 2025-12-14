@@ -84,11 +84,15 @@ async def github_webhook(
 
         case "issue_comment":
             event = IssueCommentEvent(**payload)
-            # Only process comments on PRs that mention @reviewer
+            # Only process comments on PRs that contain a bot trigger
+            comment_lower = event.comment.body.lower()
+            has_trigger = any(
+                trigger.lower() in comment_lower for trigger in settings.bot_triggers
+            )
             if (
                 event.action == "created"
                 and event.issue.pull_request is not None
-                and "@reviewer" in event.comment.body.lower()
+                and has_trigger
             ):
                 await process_comment_command.defer_async(
                     installation_id=event.installation.id,
