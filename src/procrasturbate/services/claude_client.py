@@ -162,6 +162,8 @@ Please review this pull request and provide your analysis as JSON."""
                 "comments": [],
             }
 
+        # Truncate prompts to avoid database bloat (50KB limit each)
+        max_prompt_len = 50000
         return ClaudeReviewResponse(
             summary=data.get("summary", ""),
             risk_level=data.get("risk_level", "medium"),
@@ -169,6 +171,6 @@ Please review this pull request and provide your analysis as JSON."""
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
             model=model,
-            system_prompt=system_prompt,
-            user_prompt=user_message,
+            system_prompt=system_prompt[:max_prompt_len] if system_prompt else None,
+            user_prompt=user_message[:max_prompt_len] if user_message else None,
         )

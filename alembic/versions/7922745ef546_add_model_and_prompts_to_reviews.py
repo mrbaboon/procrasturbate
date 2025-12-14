@@ -22,9 +22,12 @@ def upgrade() -> None:
     op.add_column('reviews', sa.Column('model', sa.String(length=100), nullable=True))
     op.add_column('reviews', sa.Column('system_prompt', sa.Text(), nullable=True))
     op.add_column('reviews', sa.Column('user_prompt', sa.Text(), nullable=True))
+    # Index for filtering/searching by model
+    op.create_index('ix_reviews_model', 'reviews', ['model'])
 
 
 def downgrade() -> None:
+    op.drop_index('ix_reviews_model', table_name='reviews')
     op.drop_column('reviews', 'user_prompt')
     op.drop_column('reviews', 'system_prompt')
     op.drop_column('reviews', 'model')

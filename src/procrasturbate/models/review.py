@@ -85,21 +85,17 @@ class Review(Base):
     files_reviewed: Mapped[int] = mapped_column(Integer, default=0)
     comments_posted: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Cost tracking
+    # Cost tracking and model info
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
     cost_cents: Mapped[int] = mapped_column(Integer, default=0)
-
-    # Model used for review
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Error info if failed
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Config snapshot (what config was active at review time)
+    # Debugging/transparency: config and prompts used
     config_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-
-    # Full prompts used (for debugging/transparency)
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     user_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -123,3 +119,10 @@ class Review(Base):
         back_populates="review",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def duration_seconds(self) -> int | None:
+        """Calculate review duration in seconds."""
+        if self.started_at and self.completed_at:
+            return int((self.completed_at - self.started_at).total_seconds())
+        return None
