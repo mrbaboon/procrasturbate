@@ -40,6 +40,7 @@ async def process_comment_command(
     installation_id: int,
     repo_full_name: str,
     pr_number: int,
+    comment_id: int,
     comment_body: str,
     comment_author: str,
 ) -> None:
@@ -56,6 +57,8 @@ async def process_comment_command(
                 await gh.create_issue_comment(owner, repo, pr_number, get_help_message())
 
             case CommandType.REVIEW:
+                # Acknowledge with rocket emoji
+                await gh.add_reaction(owner, repo, comment_id, "rocket")
                 # TODO: Handle path-specific reviews via parsed.args
                 async with async_session_factory() as session:
                     engine = ReviewEngine(session)

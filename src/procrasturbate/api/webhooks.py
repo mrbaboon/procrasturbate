@@ -98,6 +98,7 @@ async def github_webhook(
                     installation_id=event.installation.id,
                     repo_full_name=event.repository.full_name,
                     pr_number=event.issue.number,
+                    comment_id=event.comment.id,
                     comment_body=event.comment.body,
                     comment_author=event.comment.user.login,
                 )
